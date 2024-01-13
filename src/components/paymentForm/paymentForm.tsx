@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import IMask from 'imask';
 import { TailSpin } from 'react-loader-spinner';
 import cn from 'classnames';
@@ -25,8 +25,10 @@ export default function PaymentForm({mobileOperator}: Props){
     
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const phoneRef = useRef<HTMLInputElement>(null);
+    const sumRef = useRef<HTMLInputElement>(null);
     
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<TypePaymentForm>({ mode: "onBlur" });
+    const { control, handleSubmit, formState: { errors }, reset } = useForm<TypePaymentForm>({ mode: "onBlur" });
     const phoneRegister = { 
     required: {
         value: true,
@@ -61,18 +63,18 @@ export default function PaymentForm({mobileOperator}: Props){
             setLoading(false);
         }
     }
+
+    
     useEffect(() => {
-        const inputPhone = document.getElementById('phone');
-        inputPhone && IMask(inputPhone, {
+        phoneRef.current && IMask(phoneRef.current, {
         mask: '+{7}(000)000-00-00',
         });
-        const inputSum = document.getElementById('sum');
-        inputSum && IMask(inputSum, {
+        sumRef.current && IMask(sumRef.current, {
         mask: Number,
         min: 1,
         max: 1000
         });
-    }, []);
+    }, [phoneRef, sumRef]);
 
     return (    
         <StyledPaymentForm>
@@ -85,9 +87,37 @@ export default function PaymentForm({mobileOperator}: Props){
                     <Image src={mobileOperator?.logo} alt="logo" />
                     <span>{mobileOperator?.title}</span>
                 </MobileOperator>}
-                <Input id='phone' placeholder='Телефон' className={cn({ error: errors.tel })} {...register("tel", { ...phoneRegister })}/>
+                <Controller
+                    name="tel"
+                    control={control}
+                    rules={phoneRegister}
+                    render={({ field: {onChange, onBlur, value} }) => (
+                        <Input
+                            ref={phoneRef} 
+                            placeholder='Телефон' 
+                            className={cn({ error: errors.tel })} 
+                            onChange={onChange} 
+                            onBlur={onBlur} 
+                            value={value}
+                        />
+                    )}
+                />
                 {errors?.tel && <Error> {errors?.tel.message}</Error>}
-                <Input id='sum' placeholder='Сумма, ₽' className={cn({ error: errors.sum })} {...register("sum", { ...sumRegister })}/>
+                <Controller
+                    name="sum"
+                    control={control}
+                    rules={sumRegister}
+                    render={({ field: {onChange, onBlur, value} }) => (
+                        <Input
+                            ref={sumRef} 
+                            placeholder='Сумма, ₽' 
+                            className={cn({ error: errors.sum })} 
+                            onChange={onChange} 
+                            onBlur={onBlur} 
+                            value={value}
+                        />
+                    )}
+                />
                 {errors?.sum && <Error> {errors?.sum.message}</Error>} 
                 <Button disabled={loading}>
                     {loading ? <TailSpin

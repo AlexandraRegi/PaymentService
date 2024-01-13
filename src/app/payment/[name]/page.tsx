@@ -13,7 +13,7 @@ export default function PaymentPage({
 }: { 
   params: { name: string } 
 }) {
-  let mobileOperator = api.getOperator(name);
+  const mobileOperator = api.getOperator(name);
 
   return (<PaymentForm mobileOperator={mobileOperator} />)
 }
